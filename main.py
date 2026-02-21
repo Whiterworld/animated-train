@@ -17,6 +17,10 @@ os.makedirs(CONVERTED_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Word to PDF API is running!"
+
 @app.route('/convert', methods=['POST'])
 def convert_files():
     if 'files' not in request.files:
@@ -53,6 +57,5 @@ def download_file(filename):
     return send_from_directory(CONVERTED_FOLDER, filename, as_attachment=True)
 
 if __name__ == '__main__':
-    # Bind to 0.0.0.0 and use Render's PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
