@@ -23,10 +23,12 @@ def home():
 
 @app.route('/convert', methods=['POST'])
 def convert_files():
-    if 'files' not in request.files:
-        return jsonify({"error": "No files uploaded"}), 400
-
     files = request.files.getlist('files')
+    print("Files received:", [file.filename for file in files])  # debug log
+
+    if not files:
+        return jsonify({"converted": [], "message": "No files uploaded"}), 200
+
     converted_files = []
 
     for file in files:
@@ -48,9 +50,9 @@ def convert_files():
             continue
 
     if not converted_files:
-        return jsonify({"error": "No valid files converted"}), 400
+        return jsonify({"converted": [], "message": "No valid .docx files uploaded"}), 200
 
-    return jsonify({"converted": converted_files})
+    return jsonify({"converted": converted_files}), 200
 
 @app.route('/download/<filename>')
 def download_file(filename):
