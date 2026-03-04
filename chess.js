@@ -27,10 +27,9 @@ app.use(express.json());
 const io = new Server(server, { cors: corsOptions });
 
 /* ================== DATABASE ================== */
-mongoose.connect(
-  "mongodb+srv://admin:admin123@cluster0.uhfubqa.mongodb.net",
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
+mongoose.connect("mongodb+srv://admin:admin123@cluster0.uhfubqa.mongodb.net")
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
 /* ================== USER SCHEMA ================== */
 const userSchema = new mongoose.Schema({
