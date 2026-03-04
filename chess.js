@@ -14,18 +14,23 @@ const server = http.createServer(app);
 
 /* ================== CORS ================== */
 const corsOptions = {
-  origin: "https://chessplatform.netlify.app",
-  methods: ["GET", "POST"],
+  origin: "https://chessplatform.netlify.app", // your frontend
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 /* ================== SOCKET.IO ================== */
 const io = new Server(server, { cors: corsOptions });
 
 /* ================== DATABASE ================== */
-mongoose.connect("mongodb+srv://admin:admin123@cluster0.uhfubqa.mongodb.net");
+mongoose.connect(
+  "mongodb+srv://admin:admin123@cluster0.uhfubqa.mongodb.net",
+  { useNewUrlParser: true, useUnifiedTopology: true }
+);
 
 /* ================== USER SCHEMA ================== */
 const userSchema = new mongoose.Schema({
@@ -37,7 +42,6 @@ const userSchema = new mongoose.Schema({
   losses: { type: Number, default: 0 },
   draws: { type: Number, default: 0 },
 });
-
 const User = mongoose.model("User", userSchema);
 
 /* ================== AUTH ================== */
@@ -134,7 +138,7 @@ io.use((socket, next) => {
 /* ================== SOCKET EVENTS ================== */
 io.on("connection", (socket) => {
 
-  /* MATCHMAKING */
+  // MATCHMAKING
   socket.on("joinMatchmaking", () => {
     if (!queue.find(s => s.id === socket.id)) queue.push(socket);
 
@@ -157,16 +161,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* AI GAME */
+  // AI GAME
   socket.on("startAIGame", () => {
     const roomId = "ai_" + Date.now();
     socket.join(roomId);
-
     games[roomId] = { chess: new Chess(), ai: true };
     socket.emit("matchFound", { roomId, color: "w" });
   });
 
-  /* LEGAL MOVES */
+  // LEGAL MOVES
   socket.on("getLegalMoves", ({ roomId, fromIndex }) => {
     const gameObj = games[roomId];
     if (!gameObj) return;
@@ -175,11 +178,10 @@ io.on("connection", (socket) => {
     socket.emit("legalMoves", moves.map(m => m.to));
   });
 
-  /* CHESS MOVE */
+  // CHESS MOVE
   socket.on("chessMove", async ({ roomId, move }) => {
     const gameObj = games[roomId];
     if (!gameObj) return;
-
     const chess = gameObj.chess;
     const result = chess.move({ from: indexToSquare(move.from), to: indexToSquare(move.to), promotion: "q" });
     if (!result) return socket.emit("illegalMove");
@@ -187,7 +189,7 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("chessUpdate", { fen: chess.fen(), turn: chess.turn() });
     if (chess.isCheck() && !chess.isCheckmate()) io.to(roomId).emit("check", { color: chess.turn() });
 
-    /* GAME OVER */
+    // GAME OVER
     if (chess.isGameOver()) {
       if (!gameObj.ai) {
         const { white, black } = gameObj.players;
@@ -207,7 +209,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    /* AI MOVE */
+    // AI MOVE
     if (gameObj.ai) {
       setTimeout(() => {
         const moves = chess.moves({ verbose: true });
@@ -226,17 +228,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* REMATCH */
+  // REMATCH
   socket.on("requestRematch", ({ roomId }) => {
     const gameObj = games[roomId];
     if (!gameObj) return;
-
     if (gameObj.ai) {
       gameObj.chess = new Chess();
       io.to(roomId).emit("rematchStarted", { fen: gameObj.chess.fen(), turn: gameObj.chess.turn() });
       return;
     }
-
     gameObj.rematchVotes.add(socket.userId);
     const players = Object.values(gameObj.players);
     if (players.every(id => gameObj.rematchVotes.has(id))) {
@@ -246,10 +246,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* DISCONNECT */
+  // DISCONNECT
   socket.on("disconnect", () => {
     queue = queue.filter(s => s.id !== socket.id);
-
     for (let roomId in games) {
       const game = games[roomId];
       if (!game.players) continue;
