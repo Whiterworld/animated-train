@@ -1,3 +1,4 @@
+// chess.js
 import express from "express";
 import http from "http";
 import mongoose from "mongoose";
@@ -85,17 +86,13 @@ async function updateRatings(winnerId, loserId, draw = false) {
   if (!winner || !loser) return;
 
   if (draw) {
-    const newWinnerElo = calculateElo(winner.elo, loser.elo, 0.5);
-    const newLoserElo = calculateElo(loser.elo, winner.elo, 0.5);
-    winner.elo = newWinnerElo;
-    loser.elo = newLoserElo;
+    winner.elo = calculateElo(winner.elo, loser.elo, 0.5);
+    loser.elo = calculateElo(loser.elo, winner.elo, 0.5);
     winner.draws++;
     loser.draws++;
   } else {
-    const newWinnerElo = calculateElo(winner.elo, loser.elo, 1);
-    const newLoserElo = calculateElo(loser.elo, winner.elo, 0);
-    winner.elo = newWinnerElo;
-    loser.elo = newLoserElo;
+    winner.elo = calculateElo(winner.elo, loser.elo, 1);
+    loser.elo = calculateElo(loser.elo, winner.elo, 0);
     winner.wins++;
     loser.losses++;
   }
@@ -173,7 +170,6 @@ io.on("connection", (socket) => {
   socket.on("getLegalMoves", ({ roomId, fromIndex }) => {
     const gameObj = games[roomId];
     if (!gameObj) return;
-
     const square = indexToSquare(fromIndex);
     const moves = gameObj.chess.moves({ square, verbose: true });
     socket.emit("legalMoves", moves.map(m => m.to));
@@ -189,7 +185,6 @@ io.on("connection", (socket) => {
     if (!result) return socket.emit("illegalMove");
 
     io.to(roomId).emit("chessUpdate", { fen: chess.fen(), turn: chess.turn() });
-
     if (chess.isCheck() && !chess.isCheckmate()) io.to(roomId).emit("check", { color: chess.turn() });
 
     /* GAME OVER */
@@ -217,7 +212,6 @@ io.on("connection", (socket) => {
       setTimeout(() => {
         const moves = chess.moves({ verbose: true });
         if (!moves.length) return;
-
         const aiMove = moves[Math.floor(Math.random() * moves.length)];
         chess.move(aiMove);
         io.to(roomId).emit("chessUpdate", { fen: chess.fen(), turn: chess.turn() });
@@ -268,4 +262,5 @@ io.on("connection", (socket) => {
 });
 
 /* ================== START SERVER ================== */
-server.listen(5000, () => console.log("Server running on http://localhost:5000"));
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
