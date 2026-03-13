@@ -13,17 +13,19 @@ const app = express();
 const server = http.createServer(app);
 
 /* ================== CORS ================== */
-const corsOptions = {
-  const allowedOrigins = [
+const allowedOrigins = [
   'https://chessplatform.netlify.app',
   'https://ludoplatform.netlify.app',
   'http://localhost:5173'
-];,
- // your frontend
+];
+
+const corsOptions = {
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json());
