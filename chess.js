@@ -14,7 +14,12 @@ const server = http.createServer(app);
 
 /* ================== CORS ================== */
 const corsOptions = {
-  origin: "https://chessplatform.netlify.app", // your frontend
+  const allowedOrigins = [
+  'https://chessplatform.netlify.app',
+  'https://ludoplatform.netlify.app',
+  'http://localhost:5173'
+];,
+ // your frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
