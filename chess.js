@@ -16,7 +16,8 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'https://chessplatform.netlify.app',
   'https://ludoplatform.netlify.app',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'https://onlinegamezone.netlify.app'
 ];
 
 const corsOptions = {
